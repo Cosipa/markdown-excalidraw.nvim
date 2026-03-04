@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# macOS
+.DS_Store
+
+# Neovim
+*.swp
+*.swo
+*~
+
+# Temporary files from atomic writes
+*.excalidraw.tmp
+
+# Claude Code
+.claude/

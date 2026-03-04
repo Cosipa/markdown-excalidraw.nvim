@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "WebSearch",
+      "WebFetch(domain:docs.excalidraw.com)",
+      "WebFetch(domain:deepwiki.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:jsfiddle.net)",
+      "Bash(ls:*)",
+      "Bash(python3:*)",
+      "mcp__plugin_claude-mem_mcp-search__save_memory",
+      "WebFetch(domain:127.0.0.1)",
+      "WebFetch(domain:esm.sh)",
+      "Bash(curl:*)"
+    ]
+  }
+}
