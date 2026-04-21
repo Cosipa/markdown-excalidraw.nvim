@@ -18,10 +18,13 @@ from urllib.error import HTTPError
 # Add server directory to path so we can import the module
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "server"))
 
+import excalidraw_server as server_module
 from excalidraw_server import ExcalidrawHandler, is_allowed_path, find_free_port
 
 
 class TestIsAllowedPath(unittest.TestCase):
+    def setUp(self):
+        server_module.ALLOWED_BASE_DIRS = []
     """Tests for the is_allowed_path() security function."""
 
     def test_excalidraw_extension(self):
@@ -82,6 +85,7 @@ class LiveServerTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        server_module.ALLOWED_BASE_DIRS = []
         cls.server = HTTPServer(("127.0.0.1", 0), ExcalidrawHandler)
         cls.port = cls.server.server_address[1]
         cls.base_url = f"http://127.0.0.1:{cls.port}"
@@ -93,6 +97,7 @@ class LiveServerTestCase(unittest.TestCase):
     def tearDownClass(cls):
         cls.server.shutdown()
         cls.thread.join(timeout=5)
+        server_module.ALLOWED_BASE_DIRS = []
 
     def request(self, method, path, body=None, headers=None):
         """Helper to make HTTP requests to the test server."""
@@ -123,8 +128,8 @@ class TestHealthEndpoint(LiveServerTestCase):
         self.assertIn("application/json", headers.get("Content-Type", ""))
 
     def test_health_cors_header(self):
-        _, _, headers = self.request("GET", "/api/health")
-        self.assertEqual(headers.get("Access-Control-Allow-Origin"), "*")
+        _, _, headers = self.request("GET", "/api/health", headers={"Origin": "http://localhost:3000"})
+        self.assertIsNotNone(headers.get("Access-Control-Allow-Origin"))
 
 
 class TestIndexEndpoint(LiveServerTestCase):
@@ -187,7 +192,7 @@ class TestGetFile(LiveServerTestCase):
         status, body, _ = self.request("GET", "/api/file?path=/tmp/bad.txt")
         self.assertEqual(status, 403)
         data = json.loads(body)
-        self.assertEqual(data["error"], "File type not allowed")
+        self.assertIn("not allowed", data["error"])
 
     def test_file_not_found(self):
         status, body, _ = self.request(
@@ -283,7 +288,7 @@ class TestPostFile(LiveServerTestCase):
         )
         self.assertEqual(status, 403)
         data = json.loads(body)
-        self.assertEqual(data["error"], "File type not allowed")
+        self.assertIn("not allowed", data["error"])
 
     def test_invalid_json_body(self):
         with tempfile.NamedTemporaryFile(

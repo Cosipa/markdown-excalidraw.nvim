@@ -63,9 +63,19 @@ require("excalidraw").setup({
   -- Debounce interval (ms) before auto-saving changes from the browser
   save_debounce_ms = 1000,
 
+  -- Idle timeout in minutes before server auto-stops (0 = disabled)
+  server_timeout_min = 15,
+
   -- Custom browser command (nil = system default)
-  -- Examples: "firefox", "google-chrome", "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+  -- Examples: "firefox", "google-chrome", "app.zen_browser.zen"
   browser_command = nil,
+
+  -- Path to an .excalidrawlib library file for shared shapes/stencils
+  -- Default: ~/.excalidraw/library.excalidrawlib
+  library_path = nil,
+
+  -- Subdirectory name for created excalidraw files (used by :ExcalidrawCreate)
+  assets_dir = "assets",
 
   -- Log level: "debug", "info", "warn", "error"
   log_level = "info",
@@ -78,8 +88,8 @@ All options are optional. Defaults are shown above.
 
 | Command | Description |
 |---|---|
-| `:ExcalidrawOpen [file]` | Open an `.excalidraw` file in the browser. Uses the current buffer if no argument is given. |
-| `:ExcalidrawCreate <name>` | Create a new `.excalidraw` file with an empty template and open it in the browser. Appends `.excalidraw` extension if missing. |
+| `:ExcalidrawOpen [file]` | Open an `.excalidraw` file in the browser. If no argument, tries to detect a link under the cursor, then falls back to the current buffer. |
+| `:ExcalidrawCreate <name>` | Create a new `.excalidraw` file in the `assets/` subdirectory and open it. Prompts for a name if none given. Inserts a markdown link at the cursor position. |
 | `:ExcalidrawStatus` | Show whether the server is running and on which port. |
 | `:ExcalidrawStop` | Stop the background server. |
 
@@ -87,7 +97,7 @@ All options are optional. Defaults are shown above.
 
 | Key | Action |
 |---|---|
-| `<leader>xo` | Open current file in Excalidraw |
+| `<leader>xo` | Open current file (or link under cursor) in Excalidraw |
 | `<leader>xn` | Create a new Excalidraw file |
 | `<leader>xs` | Show server status |
 | `<leader>xq` | Stop the server |
@@ -96,18 +106,53 @@ All options are optional. Defaults are shown above.
 
 1. When you open or create an `.excalidraw` file, the plugin starts a local Python HTTP server (if not already running).
 2. The server serves a single-page Excalidraw editor loaded from [esm.sh](https://esm.sh) CDN.
-3. Your default browser opens to `http://127.0.0.1:<port>/?file=<path>`.
+3. Your default browser opens to `http://127.0.0.1:<port>/?file=<path>&library=<path>`.
 4. As you draw, changes are automatically saved back to disk via the server's REST API (debounced, default 1s).
-5. Closing the browser tab triggers a final save via `sendBeacon`.
-6. The server is automatically stopped when Neovim exits.
+5. Library items are synced separately - changes to the library are saved to the configured `.excalidrawlib` file.
+6. Closing the browser tab triggers a final save via `sendBeacon`.
+7. The server automatically stops after the configured idle timeout (default 15 min) or when Neovim exits.
+
+## Library Support
+
+The plugin supports a shared library of reusable shapes and stencils. Library items are stored in an `.excalidrawlib` file.
+
+### Configuration
+
+Set `library_path` to point to your library file. If not set, defaults to `~/.excalidraw/library.excalidrawlib`.
+
+```lua
+require("excalidraw").setup({
+  library_path = "~/.excalidraw/library.excalidrawlib",
+})
+```
+
+### How It Works
+
+- On page load, the library is fetched from the server and loaded into Excalidraw via the `updateLibrary` API, bypassing browser localStorage.
+- When you add or remove library items, changes are debounced and saved to disk automatically.
+- A status indicator in the bottom-right corner shows "Library saving..." / "Library saved" feedback.
+- The library is also saved on tab close via `sendBeacon` as a last-chance save.
+
+## Markdown Integration
+
+### Opening diagrams from markdown links
+
+Place your cursor on a markdown link like `[diagram](./my-diagram.excalidraw)` and run `:ExcalidrawOpen` to open that file directly.
+
+### Creating linked diagrams
+
+Run `:ExcalidrawCreate` to create a new diagram. A markdown link is automatically inserted at your cursor position, making it easy to embed diagrams in your notes.
 
 ## Features
 
 - **Zero Python dependencies** - uses only the standard library (`http.server`, `json`, `socket`)
 - **Automatic file sync** - changes in the browser are debounced and saved to disk
+- **Library support** - shared shapes/stencils synced to `.excalidrawlib` files
 - **Last-chance save** - uses `navigator.sendBeacon` on tab close to avoid data loss
 - **Atomic writes** - writes to a temp file then renames, preventing corruption
-- **Security** - server binds to localhost only, and rejects requests for non-`.excalidraw` files
+- **Server idle timeout** - server auto-stops after inactivity to free resources
+- **Security** - server binds to localhost only, CORS restricted to localhost origins, path validation limits file access to the directory of the first opened file
+- **No browser caching** - `Cache-Control: no-store` headers ensure fresh data on every open
 - **JSON syntax highlighting** - `.excalidraw` files get JSON treesitter highlighting in Neovim
 - **Theme sync** - the Excalidraw editor follows your Neovim light/dark theme
 - **Cross-platform** - macOS (`open`), Linux (`xdg-open`), and WSL (`wslview`)
@@ -123,7 +168,7 @@ excalidraw.nvim/
 │   ├── config.lua               # Default config and merge logic
 │   ├── server.lua               # Python server lifecycle (jobstart/jobstop)
 │   ├── commands.lua             # Command implementations
-│   └── utils.lua                # Helpers (browser, URL encoding, logging)
+│   └── utils.lua                # Helpers (browser, URL encoding, logging, path utils)
 └── server/
     ├── excalidraw_server.py     # Python HTTP server (stdlib only)
     └── index.html               # Excalidraw web app (React from esm.sh CDN)

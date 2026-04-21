@@ -89,6 +89,15 @@ describe("config", function()
       assert.equal("firefox", config.options.browser_command)
     end)
 
+    it("has nil library_path by default", function()
+      assert.is_nil(config.defaults.library_path)
+    end)
+
+    it("can set library_path", function()
+      config.setup({ library_path = "~/my-library.excalidrawlib" })
+      assert.equal("~/my-library.excalidrawlib", config.options.library_path)
+    end)
+
     it("resets properly on re-setup", function()
       config.setup({ theme = "dark" })
       assert.equal("dark", config.options.theme)

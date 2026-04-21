@@ -187,4 +187,52 @@ describe("utils", function()
       assert.equal(1, vim.fn.isdirectory(server_dir))
     end)
   end)
+
+  describe("expand_path", function()
+    it("returns path unchanged if no tilde", function()
+      assert.equal("/home/user/file", utils.expand_path("/home/user/file"))
+    end)
+
+    it("returns empty string for empty input", function()
+      assert.equal("", utils.expand_path(""))
+    end)
+
+    it("expands tilde to home directory", function()
+      local ok, home = pcall(vim.fn.stdpath, "home")
+      if ok and home then
+        local result = utils.expand_path("~/test")
+        assert.equal(home .. "/test", result)
+      end
+    end)
+  end)
+
+  describe("get_library_path", function()
+    local config = require("excalidraw.config")
+    local original_options
+
+    before_each(function()
+      original_options = vim.deepcopy(config.options)
+    end)
+
+    after_each(function()
+      config.options = original_options
+    end)
+
+    it("returns nil when library_path is nil and no home", function()
+      config.options.library_path = nil
+      local result = utils.get_library_path()
+      if not vim.env.HOME then
+        assert.is_nil(result)
+      end
+    end)
+
+    it("returns configured library_path", function()
+      config.options.library_path = "~/my-lib.excalidrawlib"
+      local result = utils.get_library_path()
+      local ok, home = pcall(vim.fn.stdpath, "home")
+      if ok and home then
+        assert.equal(home .. "/my-lib.excalidrawlib", result)
+      end
+    end)
+  end)
 end)

@@ -52,6 +52,7 @@
     const filePath = params.get("file");
     const theme = params.get("theme") || "dark";
     const debounceMs = parseInt(params.get("debounce") || "1000", 10);
+    const libraryPath = params.get("library");
 
     const statusEl = document.getElementById("status");
     let statusTimeout = null;
@@ -85,6 +86,60 @@
       }
     } catch (e) {
       console.error("Failed to load file:", e);
+    }
+
+    // Load library
+    let libraryItems = [];
+    if (libraryPath) {
+      try {
+        const resp = await fetch(`/api/library`);
+        if (resp.ok) {
+          const libData = await resp.json();
+          libraryItems = libData.libraryItems || [];
+        }
+      } catch (e) {
+        console.error("Failed to load library:", e);
+      }
+    }
+
+    // Library save (debounced)
+    let librarySaveTimer = null;
+    let currentLibraryItems = libraryItems;
+
+    async function saveLibraryToServer(items) {
+      if (!libraryPath) return;
+      const data = {
+        type: "excalidrawlib",
+        version: 2,
+        source: "excalidraw.nvim",
+        libraryItems: items,
+      };
+      try {
+        setStatus("saving", "Library saving...");
+        const resp = await fetch(`/api/library`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        if (!resp.ok) {
+          const err = await resp.json();
+          console.error("Library save failed:", err);
+          setStatus("error", "Library save failed");
+        } else {
+          setStatus("saved", "Library saved");
+        }
+      } catch (e) {
+        console.error("Library save failed:", e);
+        setStatus("error", "Library save failed");
+      }
+    }
+
+    function handleLibraryChange(items) {
+      currentLibraryItems = items;
+      clearTimeout(librarySaveTimer);
+      librarySaveTimer = setTimeout(() => {
+        saveLibraryToServer(items);
+      }, debounceMs);
     }
 
     // Debounced save
@@ -160,6 +215,20 @@
           );
         }
       }
+      // Save library on unload
+      if (libraryPath && librarySaveTimer && currentLibraryItems) {
+        clearTimeout(librarySaveTimer);
+        const libData = {
+          type: "excalidrawlib",
+          version: 2,
+          source: "excalidraw.nvim",
+          libraryItems: window._excalidrawAPI?.getLibrary?.() || currentLibraryItems,
+        };
+        navigator.sendBeacon(
+          `/api/library`,
+          JSON.stringify(libData)
+        );
+      }
     });
 
     // Build initial scene
@@ -178,8 +247,26 @@
           children: jsx(Excalidraw, {
             theme: theme,
             initialData: Object.keys(initialScene).length > 0 ? initialScene : undefined,
+            libraryItems: libraryPath ? libraryItems : undefined,
             onChange: handleChange,
-            excalidrawAPI: (api) => { window._excalidrawAPI = api; },
+            onLibraryChange: libraryPath ? handleLibraryChange : undefined,
+            excalidrawAPI: async (api) => {
+              window._excalidrawAPI = api;
+              if (libraryPath) {
+                try {
+                  const resp = await fetch(`/api/library`);
+                  if (resp.ok) {
+                    const libData = await resp.json();
+                    const items = libData.libraryItems || [];
+                    if (items.length > 0) {
+                      await api.updateLibrary({ libraryItems: items });
+                    }
+                  }
+                } catch (e) {
+                  console.error("Failed to load library on mount:", e);
+                }
+              }
+            },
           }),
         }
       );

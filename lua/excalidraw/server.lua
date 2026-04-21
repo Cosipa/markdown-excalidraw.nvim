@@ -7,6 +7,9 @@ M.job_id = nil
 M.port = nil
 M.state = "STOPPED" -- STOPPED | STARTING | RUNNING
 
+local START_POLL_INTERVAL_MS = 100
+local START_TIMEOUT_MS = 10000
+
 function M.is_running()
   return M.state == "RUNNING" and M.job_id ~= nil
 end
@@ -18,9 +21,9 @@ function M.start(callback)
   end
 
   if M.state == "STARTING" then
-    -- Queue callback for when ready
     local timer = vim.loop.new_timer()
-    timer:start(100, 100, vim.schedule_wrap(function()
+    local start_time = vim.loop.now()
+    timer:start(START_POLL_INTERVAL_MS, START_POLL_INTERVAL_MS, vim.schedule_wrap(function()
       if M.state == "RUNNING" then
         timer:stop()
         timer:close()
@@ -29,6 +32,12 @@ function M.start(callback)
         timer:stop()
         timer:close()
         utils.log("error", "Server failed to start")
+      elseif vim.loop.now() - start_time > START_TIMEOUT_MS then
+        timer:stop()
+        timer:close()
+        M.state = "STOPPED"
+        M.job_id = nil
+        utils.log("error", "Server start timed out")
       end
     end))
     return
@@ -37,12 +46,18 @@ function M.start(callback)
   M.state = "STARTING"
 
   local server_script = utils.plugin_root() .. "/server/excalidraw_server.py"
+  local lib_path = utils.get_library_path()
   local cmd = {
     config.options.python_path,
     server_script,
     "--host", config.options.server_host,
     "--port", tostring(config.options.server_port),
+    "--timeout", tostring(config.options.server_timeout_min),
   }
+  if lib_path then
+    table.insert(cmd, "--library")
+    table.insert(cmd, lib_path)
+  end
 
   local stdout_buffer = ""
 
@@ -88,7 +103,7 @@ end
 
 function M.ensure_running(callback)
   if M.is_running() then
-    callback()
+    if callback then callback() end
   else
     M.start(callback)
   end
