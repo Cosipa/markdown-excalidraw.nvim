@@ -27,7 +27,7 @@ function M.start(callback)
       if M.state == "RUNNING" then
         timer:stop()
         timer:close()
-        if callback then callback() end
+        if callback then callback(true) end
       elseif M.state == "STOPPED" then
         timer:stop()
         timer:close()
@@ -72,7 +72,7 @@ function M.start(callback)
           utils.log("info", "Server running on port " .. M.port)
           stdout_buffer = ""
           if callback then
-            vim.schedule(function() callback() end)
+            vim.schedule(function() callback(true) end)
           end
         end
       end
@@ -98,12 +98,16 @@ function M.start(callback)
     M.state = "STOPPED"
     M.job_id = nil
     utils.log("error", "Failed to start server. Is " .. config.get().python_path .. " available?")
+    if callback then
+      vim.schedule(function() callback(false) end)
+    end
+    return
   end
 end
 
 function M.ensure_running(callback)
   if M.is_running() then
-    if callback then callback() end
+    if callback then callback(true) end
   else
     M.start(callback)
   end

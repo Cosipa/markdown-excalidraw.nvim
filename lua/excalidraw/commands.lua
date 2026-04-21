@@ -52,7 +52,11 @@ function M.open(opts)
     return
   end
 
-  server.ensure_running(function()
+  server.ensure_running(function(success)
+    if not success then
+      utils.log("error", "Could not start server")
+      return
+    end
     local theme = utils.get_theme()
     local debounce = config.get().save_debounce_ms
     local lib_path = utils.get_library_path()

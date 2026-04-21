@@ -114,7 +114,7 @@ function M.get_excalidraw_link_at_cursor()
     local s, e, _text, path
     for _, pat in ipairs(patterns) do
       s, e, _text, path = line:find(pat, line_start)
-      if s and col >= s - 1 and col <= e - 1 then
+      if s and col >= s - 1 and col <= e then
         return path
       end
     end
