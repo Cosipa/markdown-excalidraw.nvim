@@ -157,6 +157,10 @@ Run `:ExcalidrawCreate` to create a new diagram. A markdown link is automaticall
 - **Theme sync** - the Excalidraw editor follows your Neovim light/dark theme
 - **Cross-platform** - macOS (`open`), Linux (`xdg-open`), and WSL (`wslview`)
 
+## Limitations
+
+- **Internet required** - The Excalidraw editor is loaded from a CDN (esm.sh). Offline mode requires bundling the assets locally, which is not yet implemented. More work needed.
+
 ## File Structure
 
 ```
@@ -173,6 +177,10 @@ excalidraw.nvim/
     ├── excalidraw_server.py     # Python HTTP server (stdlib only)
     └── index.html               # Excalidraw web app (React from esm.sh CDN)
 ```
+
+## AI Assistance
+
+This plugin was developed with the assistance of AI tools. The code has been reviewed and tested.
 
 ## License
 
