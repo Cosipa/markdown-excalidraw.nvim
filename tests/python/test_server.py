@@ -23,9 +23,13 @@ from excalidraw_server import ExcalidrawHandler, is_allowed_path, find_free_port
 
 
 class TestIsAllowedPath(unittest.TestCase):
-    def setUp(self):
-        server_module.ALLOWED_BASE_DIRS = []
     """Tests for the is_allowed_path() security function."""
+
+    def setUp(self):
+        server_module.ALLOWED_BASE_DIRS = ["/home/user", "/a/b/c/d/e", os.getcwd()]
+
+    def tearDown(self):
+        server_module.ALLOWED_BASE_DIRS = []
 
     def test_excalidraw_extension(self):
         self.assertTrue(is_allowed_path("/home/user/drawing.excalidraw"))
@@ -59,6 +63,11 @@ class TestIsAllowedPath(unittest.TestCase):
 
     def test_dotfile_excalidraw(self):
         self.assertTrue(is_allowed_path("/home/user/.hidden.excalidraw"))
+
+    def test_no_base_dirs_rejects_all(self):
+        server_module.ALLOWED_BASE_DIRS = []
+        self.assertFalse(is_allowed_path("/home/user/drawing.excalidraw"))
+        self.assertFalse(is_allowed_path("/tmp/test.excalidraw"))
 
 
 class TestFindFreePort(unittest.TestCase):

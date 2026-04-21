@@ -48,9 +48,10 @@ describe("commands", function()
     end)
 
     it("adds .excalidraw extension if missing", function()
-      local path_without_ext = temp_dir .. "/drawing"
-      commands.create({ fargs = { path_without_ext } })
-      assert.equal(1, vim.fn.filereadable(path_without_ext .. ".excalidraw"))
+      local name_without_ext = "drawing"
+      commands.create({ fargs = { name_without_ext } })
+      local assets_path = temp_dir .. "/assets/" .. name_without_ext .. ".excalidraw"
+      assert.equal(1, vim.fn.filereadable(assets_path))
     end)
 
     it("opens existing file instead of overwriting", function()

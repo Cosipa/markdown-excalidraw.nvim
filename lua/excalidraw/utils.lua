@@ -4,8 +4,18 @@ local config = require("excalidraw.config")
 
 local log_levels = { debug = 1, info = 2, warn = 3, error = 4 }
 
+local function get_home()
+  local ok, home = pcall(vim.fn.stdpath, "home")
+  if ok and home then return home end
+  return vim.env.HOME
+end
+
+local function opts()
+  return config.get()
+end
+
 function M.log(level, msg)
-  local cfg_level = log_levels[config.options.log_level] or 2
+  local cfg_level = log_levels[opts().log_level] or 2
   local msg_level = log_levels[level] or 2
   if msg_level >= cfg_level then
     local prefix = "[excalidraw] "
@@ -28,7 +38,7 @@ function M.url_encode(str)
 end
 
 function M.get_theme()
-  local theme = config.options.theme
+  local theme = opts().theme
   if theme == "auto" then
     return vim.o.background == "dark" and "dark" or "light"
   end
@@ -36,7 +46,7 @@ function M.get_theme()
 end
 
 function M.open_browser(url)
-  local cmd = config.options.browser_command
+  local cmd = opts().browser_command
   if cmd then
     vim.fn.jobstart({ cmd, url }, { detach = true })
     return
@@ -70,10 +80,7 @@ end
 
 function M.expand_path(path)
   if path and path:sub(1, 1) == "~" then
-    local ok, home = pcall(vim.fn.stdpath, "home")
-    if not ok or not home then
-      home = vim.env.HOME
-    end
+    local home = get_home()
     if not home then
       return path
     end
@@ -83,12 +90,9 @@ function M.expand_path(path)
 end
 
 function M.get_library_path()
-  local lib_path = config.options.library_path
+  local lib_path = opts().library_path
   if not lib_path then
-    local ok, home = pcall(vim.fn.stdpath, "home")
-    if not ok or not home then
-      home = vim.env.HOME
-    end
+    local home = get_home()
     if home then
       lib_path = home .. "/.excalidraw/library.excalidrawlib"
     end
@@ -128,7 +132,7 @@ function M.get_assets_path(name)
     return nil, "No file in current buffer"
   end
   local dir = vim.fn.fnamemodify(current_file, ":h")
-  local assets = config.options.assets_dir or "assets"
+  local assets = opts().assets_dir or "assets"
   local full_path = dir .. "/" .. assets .. "/" .. name
   if not M.is_excalidraw_file(full_path) then
     full_path = full_path .. ".excalidraw"

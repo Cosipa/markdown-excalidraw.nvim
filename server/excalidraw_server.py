@@ -41,14 +41,14 @@ def get_library_template():
 
 def is_allowed_path(path):
     """Check if the file path has an allowed extension and is within allowed directories."""
+    if not ALLOWED_BASE_DIRS:
+        return False
     for ext in ALLOWED_EXTENSIONS:
         if path.endswith(ext):
             abs_path = os.path.abspath(path)
             for base_dir in ALLOWED_BASE_DIRS:
                 if abs_path.startswith(os.path.abspath(base_dir)):
                     return True
-            if not ALLOWED_BASE_DIRS:
-                return True
     return False
 
 
@@ -217,6 +217,7 @@ class ExcalidrawHandler(BaseHTTPRequestHandler):
             return
 
         try:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
             tmp_path = file_path + ".tmp"
             with open(tmp_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)

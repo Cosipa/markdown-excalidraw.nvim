@@ -88,43 +88,43 @@ describe("utils", function()
     local original_options
 
     before_each(function()
-      original_options = vim.deepcopy(config.options)
+      config.setup({})
+      original_options = vim.deepcopy(config.get())
     end)
 
     after_each(function()
-      config.options = original_options
+      config.setup(original_options)
     end)
 
     it("returns 'dark' when theme is auto and background is dark", function()
-      config.options.theme = "auto"
+      config.setup({ theme = "auto" })
       vim.o.background = "dark"
       assert.equal("dark", utils.get_theme())
     end)
 
     it("returns 'light' when theme is auto and background is light", function()
-      config.options.theme = "auto"
+      config.setup({ theme = "auto" })
       vim.o.background = "light"
       assert.equal("light", utils.get_theme())
     end)
 
     it("returns explicit theme when set to 'dark'", function()
-      config.options.theme = "dark"
+      config.setup({ theme = "dark" })
       assert.equal("dark", utils.get_theme())
     end)
 
     it("returns explicit theme when set to 'light'", function()
-      config.options.theme = "light"
+      config.setup({ theme = "light" })
       assert.equal("light", utils.get_theme())
     end)
   end)
 
   describe("log", function()
     local config = require("excalidraw.config")
-    local original_options
     local notifications
 
     before_each(function()
-      original_options = vim.deepcopy(config.options)
+      config.setup({})
       notifications = {}
       -- Stub vim.notify to capture calls
       _G._original_notify = vim.notify
@@ -134,44 +134,43 @@ describe("utils", function()
     end)
 
     after_each(function()
-      config.options = original_options
       vim.notify = _G._original_notify
     end)
 
     it("shows error messages at info log level", function()
-      config.options.log_level = "info"
+      config.setup({ log_level = "info" })
       utils.log("error", "something broke")
       assert.equal(1, #notifications)
       assert.equal(vim.log.levels.ERROR, notifications[1].level)
     end)
 
     it("shows info messages at info log level", function()
-      config.options.log_level = "info"
+      config.setup({ log_level = "info" })
       utils.log("info", "all good")
       assert.equal(1, #notifications)
     end)
 
     it("suppresses debug messages at info log level", function()
-      config.options.log_level = "info"
+      config.setup({ log_level = "info" })
       utils.log("debug", "verbose stuff")
       assert.equal(0, #notifications)
     end)
 
     it("shows debug messages at debug log level", function()
-      config.options.log_level = "debug"
+      config.setup({ log_level = "debug" })
       utils.log("debug", "verbose stuff")
       assert.equal(1, #notifications)
       assert.equal(vim.log.levels.DEBUG, notifications[1].level)
     end)
 
     it("suppresses info messages at error log level", function()
-      config.options.log_level = "error"
+      config.setup({ log_level = "error" })
       utils.log("info", "just info")
       assert.equal(0, #notifications)
     end)
 
     it("prefixes messages with [excalidraw]", function()
-      config.options.log_level = "info"
+      config.setup({ log_level = "info" })
       utils.log("info", "test message")
       assert.truthy(notifications[1].msg:find("%[excalidraw%]"))
     end)
@@ -208,18 +207,13 @@ describe("utils", function()
 
   describe("get_library_path", function()
     local config = require("excalidraw.config")
-    local original_options
 
     before_each(function()
-      original_options = vim.deepcopy(config.options)
-    end)
-
-    after_each(function()
-      config.options = original_options
+      config.setup({})
     end)
 
     it("returns nil when library_path is nil and no home", function()
-      config.options.library_path = nil
+      config.setup({ library_path = nil })
       local result = utils.get_library_path()
       if not vim.env.HOME then
         assert.is_nil(result)
@@ -227,7 +221,7 @@ describe("utils", function()
     end)
 
     it("returns configured library_path", function()
-      config.options.library_path = "~/my-lib.excalidrawlib"
+      config.setup({ library_path = "~/my-lib.excalidrawlib" })
       local result = utils.get_library_path()
       local ok, home = pcall(vim.fn.stdpath, "home")
       if ok and home then

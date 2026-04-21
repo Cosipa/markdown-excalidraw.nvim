@@ -54,12 +54,12 @@ function M.open(opts)
 
   server.ensure_running(function()
     local theme = utils.get_theme()
-    local debounce = config.options.save_debounce_ms
+    local debounce = config.get().save_debounce_ms
     local lib_path = utils.get_library_path()
     local library_param = lib_path and "&library=" .. utils.url_encode(lib_path) or ""
     local url = string.format(
       "http://%s:%d/?file=%s&theme=%s&debounce=%d%s",
-      config.options.server_host,
+      config.get().server_host,
       server.port,
       utils.url_encode(path),
       theme,

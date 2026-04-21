@@ -67,8 +67,11 @@
     }
 
     if (!filePath) {
-      document.getElementById("root").innerHTML =
-        '<p style="padding:20px;font-family:sans-serif;">Error: No file path specified.</p>';
+      const errorDiv = document.createElement("div");
+      errorDiv.style.padding = "20px";
+      errorDiv.style.fontFamily = "sans-serif";
+      errorDiv.textContent = "Error: No file path specified.";
+      document.getElementById("root").appendChild(errorDiv);
       throw new Error("No file path");
     }
 
@@ -108,12 +111,7 @@
 
     async function saveLibraryToServer(items) {
       if (!libraryPath) return;
-      const data = {
-        type: "excalidrawlib",
-        version: 2,
-        source: "excalidraw.nvim",
-        libraryItems: items,
-      };
+      const data = buildLibraryPayload(items);
       try {
         setStatus("saving", "Library saving...");
         const resp = await fetch(`/api/library`, {
@@ -146,21 +144,34 @@
     let saveTimer = null;
     let saving = false;
 
-    async function saveToServer(elements, appState, files) {
-      saving = true;
-      setStatus("saving", "Saving...");
-
-      const data = {
+    function buildFilePayload(elements, appState, files) {
+      return {
         type: "excalidraw",
         version: 2,
         source: "excalidraw.nvim",
         elements: elements,
         appState: {
-          gridSize: appState.gridSize,
-          viewBackgroundColor: appState.viewBackgroundColor,
+          gridSize: appState?.gridSize,
+          viewBackgroundColor: appState?.viewBackgroundColor,
         },
         files: files || {},
       };
+    }
+
+    function buildLibraryPayload(items) {
+      return {
+        type: "excalidrawlib",
+        version: 2,
+        source: "excalidraw.nvim",
+        libraryItems: items,
+      };
+    }
+
+    async function saveToServer(elements, appState, files) {
+      saving = true;
+      setStatus("saving", "Saving...");
+
+      const data = buildFilePayload(elements, appState, files);
 
       try {
         const resp = await fetch(`/api/file?path=${encodeURIComponent(filePath)}`, {
@@ -181,7 +192,6 @@
     }
 
     function handleChange(elements, appState, files) {
-      if (!elements || elements.length === 0) return;
       setStatus("unsaved", "Unsaved");
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
@@ -197,36 +207,19 @@
         const appState = window._excalidrawAPI?.getAppState();
         const files = window._excalidrawAPI?.getFiles();
         if (elements) {
-          // Synchronous beacon for last-chance save
-          const data = {
-            type: "excalidraw",
-            version: 2,
-            source: "excalidraw.nvim",
-            elements: elements,
-            appState: {
-              gridSize: appState?.gridSize,
-              viewBackgroundColor: appState?.viewBackgroundColor,
-            },
-            files: files || {},
-          };
           navigator.sendBeacon(
             `/api/file?path=${encodeURIComponent(filePath)}`,
-            JSON.stringify(data)
+            JSON.stringify(buildFilePayload(elements, appState, files))
           );
         }
       }
       // Save library on unload
       if (libraryPath && librarySaveTimer && currentLibraryItems) {
         clearTimeout(librarySaveTimer);
-        const libData = {
-          type: "excalidrawlib",
-          version: 2,
-          source: "excalidraw.nvim",
-          libraryItems: window._excalidrawAPI?.getLibrary?.() || currentLibraryItems,
-        };
+        const libItems = window._excalidrawAPI?.getLibrary?.() || currentLibraryItems;
         navigator.sendBeacon(
           `/api/library`,
-          JSON.stringify(libData)
+          JSON.stringify(buildLibraryPayload(libItems))
         );
       }
     });
@@ -252,19 +245,8 @@
             onLibraryChange: libraryPath ? handleLibraryChange : undefined,
             excalidrawAPI: async (api) => {
               window._excalidrawAPI = api;
-              if (libraryPath) {
-                try {
-                  const resp = await fetch(`/api/library`);
-                  if (resp.ok) {
-                    const libData = await resp.json();
-                    const items = libData.libraryItems || [];
-                    if (items.length > 0) {
-                      await api.updateLibrary({ libraryItems: items });
-                    }
-                  }
-                } catch (e) {
-                  console.error("Failed to load library on mount:", e);
-                }
+              if (libraryPath && libraryItems.length > 0) {
+                await api.updateLibrary({ libraryItems });
               }
             },
           }),

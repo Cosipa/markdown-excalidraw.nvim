@@ -14,10 +14,14 @@ M.defaults = {
   assets_dir = "assets",
 }
 
-M.options = vim.deepcopy(M.defaults)
+M.options = nil
 
 function M.setup(opts)
   M.options = vim.tbl_deep_extend("force", vim.deepcopy(M.defaults), opts or {})
+end
+
+function M.get()
+  return M.options or M.defaults
 end
 
 return M

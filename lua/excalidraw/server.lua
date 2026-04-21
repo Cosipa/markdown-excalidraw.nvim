@@ -48,11 +48,11 @@ function M.start(callback)
   local server_script = utils.plugin_root() .. "/server/excalidraw_server.py"
   local lib_path = utils.get_library_path()
   local cmd = {
-    config.options.python_path,
+    config.get().python_path,
     server_script,
-    "--host", config.options.server_host,
-    "--port", tostring(config.options.server_port),
-    "--timeout", tostring(config.options.server_timeout_min),
+    "--host", config.get().server_host,
+    "--port", tostring(config.get().server_port),
+    "--timeout", tostring(config.get().server_timeout_min),
   }
   if lib_path then
     table.insert(cmd, "--library")
@@ -97,7 +97,7 @@ function M.start(callback)
   if M.job_id <= 0 then
     M.state = "STOPPED"
     M.job_id = nil
-    utils.log("error", "Failed to start server. Is " .. config.options.python_path .. " available?")
+    utils.log("error", "Failed to start server. Is " .. config.get().python_path .. " available?")
   end
 end
 
