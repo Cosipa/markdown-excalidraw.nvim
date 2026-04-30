@@ -1,6 +1,6 @@
 local M = {}
 
-local config = require("excalidraw.config")
+local config = require("markdown-excalidraw.config")
 
 local log_levels = { debug = 1, info = 2, warn = 3, error = 4 }
 

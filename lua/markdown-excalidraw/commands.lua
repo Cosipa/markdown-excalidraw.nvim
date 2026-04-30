@@ -1,8 +1,8 @@
 local M = {}
 
-local config = require("excalidraw.config")
-local server = require("excalidraw.server")
-local utils = require("excalidraw.utils")
+local config = require("markdown-excalidraw.config")
+local server = require("markdown-excalidraw.server")
+local utils = require("markdown-excalidraw.utils")
 
 local EMPTY_TEMPLATE = {
   type = "excalidraw",

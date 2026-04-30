@@ -1,7 +1,7 @@
 -- Tests for lua/excalidraw/server.lua
 -- Run with: nvim --headless -c "PlenaryBustedDirectory tests/lua"
 
-local server = require("excalidraw.server")
+local server = require("markdown-excalidraw.server")
 
 describe("server", function()
   -- Reset server state before each test

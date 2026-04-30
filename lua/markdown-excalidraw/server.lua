@@ -1,7 +1,7 @@
 local M = {}
 
-local config = require("excalidraw.config")
-local utils = require("excalidraw.utils")
+local config = require("markdown-excalidraw.config")
+local utils = require("markdown-excalidraw.utils")
 
 M.job_id = nil
 M.port = nil

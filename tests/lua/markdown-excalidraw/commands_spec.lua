@@ -1,7 +1,7 @@
 -- Tests for lua/excalidraw/commands.lua
 -- Run with: nvim --headless -c "PlenaryBustedDirectory tests/lua"
 
-local commands = require("excalidraw.commands")
+local commands = require("markdown-excalidraw.commands")
 
 describe("commands", function()
   local temp_dir = "/tmp/excalidraw_test"

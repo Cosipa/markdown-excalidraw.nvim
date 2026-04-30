@@ -1,7 +1,7 @@
 -- Tests for lua/excalidraw/utils.lua
 -- Run with: nvim --headless -c "PlenaryBustedDirectory tests/lua"
 
-local utils = require("excalidraw.utils")
+local utils = require("markdown-excalidraw.utils")
 
 describe("utils", function()
   describe("url_encode", function()
@@ -84,7 +84,7 @@ describe("utils", function()
   end)
 
   describe("get_theme", function()
-    local config = require("excalidraw.config")
+    local config = require("markdown-excalidraw.config")
     local original_options
 
     before_each(function()
@@ -120,7 +120,7 @@ describe("utils", function()
   end)
 
   describe("log", function()
-    local config = require("excalidraw.config")
+    local config = require("markdown-excalidraw.config")
     local notifications
 
     before_each(function()
@@ -206,7 +206,7 @@ describe("utils", function()
   end)
 
   describe("get_library_path", function()
-    local config = require("excalidraw.config")
+    local config = require("markdown-excalidraw.config")
 
     before_each(function()
       config.setup({})

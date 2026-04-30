@@ -3,10 +3,10 @@ if vim.g.loaded_excalidraw then
 end
 vim.g.loaded_excalidraw = true
 
-local commands = require("excalidraw.commands")
-local config = require("excalidraw.config")
-local server = require("excalidraw.server")
-local utils = require("excalidraw.utils")
+local commands = require("markdown-excalidraw.commands")
+local config = require("markdown-excalidraw.config")
+local server = require("markdown-excalidraw.server")
+local utils = require("markdown-excalidraw.utils")
 
 vim.api.nvim_create_user_command("ExcalidrawOpen", commands.open, {
   nargs = "?",

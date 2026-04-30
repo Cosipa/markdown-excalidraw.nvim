@@ -1,7 +1,7 @@
 -- Tests for lua/excalidraw/config.lua
 -- Run with: nvim --headless -c "PlenaryBustedDirectory tests/lua"
 
-local config = require("excalidraw.config")
+local config = require("markdown-excalidraw.config")
 
 describe("config", function()
   -- Reset config to defaults before each test
