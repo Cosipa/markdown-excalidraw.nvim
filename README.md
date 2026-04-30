@@ -8,21 +8,23 @@ browser with automatic file synchronization.
 > This is a fork of
 > [caioeverest/excalidraw.nvim](https://github.com/caioeverest/excalidraw.nvim)
 
+Notable changes:
+
+- Library support for shared shapes (.excalidrawlib) outside browser storage.
+- Idle timeout for the python server (shutdown).
+- Commands modified: ExcalidrawOpen detects markdown links under cursor,
+  ExcalidrawCreate auto-creates in assets/ and inserts link at cursor
+- Security: restricted CORS to localhost, added path validation.
+- Threading support for concurrent requests.
+
 ## How It Works
 
-```
-Neovim --(starts)--> Python Server --(serves)--> Browser (Excalidraw)
-                           ^                         ^
-                           |   REST API (GET/POST)   |
-                           +-------------------------+
-                                      |
-                                 Filesystem
-```
+![diagram](https://github.com/user-attachments/assets/dcb2bd05-ba41-4ac9-99b8-8f945791d061)
 
 When you open an `.excalidraw` file in Neovim, the plugin starts a lightweight
-local Python server that serves the Excalidraw editor via esm.sh and opens it in
-your browser. Changes in the browser are automatically synced back to disk via
-REST API.
+local Python server that serves the Excalidraw editor via esm.sh CDN and
+connects to it in your browser. Changes in the browser are automatically synced
+back to disk via REST API.
 
 ## Requirements
 
