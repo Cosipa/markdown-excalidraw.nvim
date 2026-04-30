@@ -34,7 +34,7 @@ def get_library_template():
     return {
         "type": "excalidrawlib",
         "version": 2,
-        "source": "excalidraw.nvim",
+        "source": "markdown-excalidraw.nvim",
         "libraryItems": [],
     }
 

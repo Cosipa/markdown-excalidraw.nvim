@@ -1,7 +1,9 @@
-# excalidraw.nvim
+# markdown-excalidraw.nvim
 
 A Neovim plugin that opens [Excalidraw](https://excalidraw.com) diagrams in your
 browser with automatic file synchronization.
+
+> This is a fork of [caioeverest/excalidraw.nvim](https://github.com/caioeverest/excalidraw.nvim)
 
 ## How It Works
 
@@ -31,7 +33,7 @@ REST API.
 
 ```lua
 {
-  "caioeverest/excalidraw.nvim",
+  "Cosipa/markdown-excalidraw.nvim",
   cmd = { "ExcalidrawOpen", "ExcalidrawCreate", "ExcalidrawStatus", "ExcalidrawStop" },
   keys = {
     { "<leader>xo", "<cmd>ExcalidrawOpen<cr>", desc = "Open excalidraw file in browser" },
