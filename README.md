@@ -3,7 +3,10 @@
 A Neovim plugin that opens [Excalidraw](https://excalidraw.com) diagrams in your
 browser with automatic file synchronization.
 
-> This is a fork of [caioeverest/excalidraw.nvim](https://github.com/caioeverest/excalidraw.nvim)
+![demo](https://github.com/user-attachments/assets/2b2f9083-83a8-40a6-9f16-ef3f9d486fce)
+
+> This is a fork of
+> [caioeverest/excalidraw.nvim](https://github.com/caioeverest/excalidraw.nvim)
 
 ## How It Works
 
@@ -29,7 +32,7 @@ REST API.
 
 ## Installation
 
-### lazy.nvim
+### lazy.nvim with bindings
 
 ```lua
 {
@@ -49,7 +52,7 @@ REST API.
 All options are optional:
 
 ```lua
-require("excalidraw").setup({
+require("markdown-excalidraw").setup({
   auto_open = true,              -- Open .excalidraw files automatically
   theme = "auto",                -- "light", "dark", or "auto" (follows vim.o.background)
   python_path = "python3",       -- Python interpreter
