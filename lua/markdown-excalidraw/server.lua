@@ -59,6 +59,9 @@ function M.start(callback)
     table.insert(cmd, lib_path)
   end
 
+  table.insert(cmd, "--version")
+  table.insert(cmd, config.get().excalidraw_version)
+
   local stdout_buffer = ""
 
   M.job_id = vim.fn.jobstart(cmd, {

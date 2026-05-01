@@ -2,20 +2,38 @@
 -- Run with: nvim --headless -c "PlenaryBustedDirectory tests/lua"
 
 local commands = require("markdown-excalidraw.commands")
+local server = require("markdown-excalidraw.server")
+local utils = require("markdown-excalidraw.utils")
 
 describe("commands", function()
   local temp_dir = "/tmp/excalidraw_test"
   local temp_file
 
+  local orig_ensure_running
+  local orig_open_browser
+
   before_each(function()
     vim.fn.mkdir(temp_dir, "p")
     temp_file = temp_dir .. "/test.excalidraw"
+    vim.cmd("silent! %bwipeout!")
+    local buf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_set_current_buf(buf)
+    vim.api.nvim_buf_set_name(0, temp_dir .. "/dummy.md")
+    orig_ensure_running = server.ensure_running
+    orig_open_browser = utils.open_browser
+    server.ensure_running = function(cb)
+      server.port = 8080
+      cb(true)
+    end
+    utils.open_browser = function(_) end
   end)
 
   after_each(function()
     if vim.fn.isdirectory(temp_dir) == 1 then
       vim.fn.delete(temp_dir, "rf")
     end
+    server.ensure_running = orig_ensure_running
+    utils.open_browser = orig_open_browser
   end)
 
   describe("open", function()
@@ -38,13 +56,10 @@ describe("commands", function()
   end)
 
   describe("create", function()
-    it("returns error when no path provided", function()
-      commands.create({})
-    end)
-
     it("creates new excalidraw file", function()
       commands.create({ fargs = { temp_file } })
-      assert.equal(1, vim.fn.filereadable(temp_file))
+      local assets_path = temp_dir .. "/assets/test.excalidraw"
+      assert.equal(1, vim.fn.filereadable(assets_path))
     end)
 
     it("adds .excalidraw extension if missing", function()
@@ -61,7 +76,8 @@ describe("commands", function()
 
     it("creates valid JSON", function()
       commands.create({ fargs = { temp_file } })
-      local content = vim.fn.readfile(temp_file)
+      local assets_path = temp_dir .. "/assets/test.excalidraw"
+      local content = vim.fn.readfile(assets_path)
       local success = vim.fn.json_decode(content[1])
       assert.truthy(success)
     end)
@@ -71,6 +87,15 @@ describe("commands", function()
     it("returns a string", function()
       local status = commands.status()
       assert.is_string(status)
+    end)
+  end)
+
+  describe("create with prompt", function()
+    it("returns error when no path provided", function()
+      local orig_ui_input = vim.ui.input
+      vim.ui.input = function(_, callback) callback(nil) end
+      commands.create({})
+      vim.ui.input = orig_ui_input
     end)
   end)
 end)

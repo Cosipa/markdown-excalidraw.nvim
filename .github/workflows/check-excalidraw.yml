@@ -1,0 +1,57 @@
+name: Check Excalidraw Updates
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get current version
+        id: current
+        run: |
+          VERSION=$(grep -oP 'excalidraw_version\s*=\s*"\K[^"]+' lua/markdown-excalidraw/config.lua || echo "0.0.0")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get latest from npm
+        id: latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST=$(npm view @excalidraw/excalidraw version)
+          echo "version=$LATEST" >> $GITHUB_OUTPUT
+
+      - name: Check existing PR
+        id: existing_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR=$(gh pr list --head "excalidraw-update" --state open --json number -q '.[0].number // ""')
+          echo "pr_number=$PR" >> $GITHUB_OUTPUT
+
+      - name: Close existing PR if update available
+        if: steps.existing_pr.outputs.pr_number != '' && steps.current.outputs.version != steps.latest.outputs.version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr close ${{ steps.existing_pr.outputs.pr_number }}
+          gh pr delete ${{ steps.existing_pr.outputs.pr_number }} --force
+
+      - name: Create PR if update available
+        if: steps.current.outputs.version != steps.latest.outputs.version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b excalidraw-update
+          sed -i 's/excalidraw_version = "[^"]*"/excalidraw_version = "'"${{ steps.latest.outputs.version }}"'"/' lua/markdown-excalidraw/config.lua
+          git add lua/markdown-excalidraw/config.lua
+          git commit -m "chore: update Excalidraw to ${{ steps.latest.outputs.version }}"
+          git push -u https://x-access-token:$GITHUB_TOKEN@github.com/${{ github.repository }} excalidraw-update
+          gh pr create --title "chore: update Excalidraw to ${{ steps.latest.outputs.version }}" --body "Update default Excalidraw version from ${{ steps.current.outputs.version }} to ${{ steps.latest.outputs.version }}."

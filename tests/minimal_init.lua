@@ -6,6 +6,7 @@ if vim.fn.isdirectory(plenary_path) == 0 then
   -- Try common plugin manager locations
   local alternatives = {
     vim.fn.stdpath("data") .. "/site/pack/packer/start/plenary.nvim",
+    vim.fn.stdpath("data") .. "/site/pack/test/start/plenary.nvim",
     vim.fn.stdpath("data") .. "/plugged/plenary.nvim",
   }
   for _, path in ipairs(alternatives) do

@@ -1,0 +1,36 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Python tests
+        run: python3 -m unittest tests/python/test_server.py -v
+
+  test-lua:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Neovim
+        run: |
+          curl -L -o nvim.tar.gz https://github.com/neovim/neovim/releases/download/v0.12.1/nvim-linux-x86_64.tar.gz
+          tar xzf nvim.tar.gz
+          sudo cp -f nvim-linux-x86_64/bin/nvim /usr/local/bin/
+          sudo cp -rf nvim-linux-x86_64/lib/nvim /usr/local/lib/
+          sudo cp -rf nvim-linux-x86_64/share/nvim /usr/local/share/
+
+      - name: Install plenary
+        run: |
+          mkdir -p $HOME/.local/share/nvim/site/pack/test/start
+          git clone --depth 1 https://github.com/nvim-lua/plenary.nvim.git $HOME/.local/share/nvim/site/pack/test/start/plenary.nvim
+
+      - name: Run Lua tests
+        run: nvim --headless -u tests/minimal_init.lua -c "PlenaryBustedDirectory tests/lua"

@@ -12,6 +12,7 @@ M.defaults = {
   log_level = "info",
   library_path = nil,
   assets_dir = "assets",
+  excalidraw_version = "0.18.1",
 }
 
 M.options = nil

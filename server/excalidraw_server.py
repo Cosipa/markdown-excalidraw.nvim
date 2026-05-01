@@ -25,6 +25,8 @@ ALLOWED_BASE_DIRS = []
 
 LIBRARY_PATH = None
 
+EXCALIDRAW_VERSION = None
+
 IDLE_TIMEOUT_SECONDS = 0
 
 LAST_REQUEST_TIME = None
@@ -164,6 +166,8 @@ class ExcalidrawHandler(BaseHTTPRequestHandler):
         try:
             with open(index_path, "r", encoding="utf-8") as f:
                 html = f.read()
+            if EXCALIDRAW_VERSION:
+                html = html.replace("EXCALIDRAW_VERSION_PLACEHOLDER", EXCALIDRAW_VERSION)
             self.send_text(html)
         except FileNotFoundError:
             self.send_json({"error": "index.html not found"}, 500)
@@ -280,17 +284,21 @@ class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
 
 
 def main():
-    global LIBRARY_PATH, IDLE_TIMEOUT_SECONDS
+    global LIBRARY_PATH, EXCALIDRAW_VERSION, IDLE_TIMEOUT_SECONDS
 
     parser = argparse.ArgumentParser(description="Excalidraw file server")
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind to")
     parser.add_argument("--port", type=int, default=0, help="Port (0 = random)")
     parser.add_argument("--library", default=None, help="Path to library file")
     parser.add_argument("--timeout", type=int, default=0, help="Idle timeout in minutes (0 = disabled)")
+    parser.add_argument("--version", default=None, help="Excalidraw version")
     args = parser.parse_args()
 
     if args.library:
         LIBRARY_PATH = os.path.abspath(args.library)
+
+    if args.version:
+        EXCALIDRAW_VERSION = args.version
 
     if args.timeout > 0:
         IDLE_TIMEOUT_SECONDS = args.timeout * 60
