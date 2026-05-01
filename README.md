@@ -19,7 +19,7 @@ Notable changes:
 
 ## How It Works
 
-![diagram](https://github.com/user-attachments/assets/5b4816c8-b412-4dc2-ae2b-345e9b0111e4)
+![diagram](https://github.com/user-attachments/assets/ea165c62-e51a-4a8f-907f-4e87cbbd42f9)
 
 When you open an `.excalidraw` file in Neovim, the plugin starts a lightweight
 local Python server that serves the Excalidraw editor via esm.sh CDN and
