@@ -34,7 +34,7 @@ function M.open(opts)
 
   if not utils.is_excalidraw_file(path) then
     local current_file = vim.api.nvim_buf_get_name(0)
-    if current_file ~= "" then
+    if current_file ~= "" and not path:match("^/") then
       local dir = vim.fn.fnamemodify(current_file, ":h")
       path = dir .. "/" .. path
     end
