@@ -133,6 +133,9 @@ function M.get_assets_path(name)
   end
   local dir = vim.fn.fnamemodify(current_file, ":h")
   local assets = opts().assets_dir or "assets"
+  if name:match("/") then
+    name = vim.fn.fnamemodify(name, ":t")
+  end
   local full_path = dir .. "/" .. assets .. "/" .. name
   if not M.is_excalidraw_file(full_path) then
     full_path = full_path .. ".excalidraw"
